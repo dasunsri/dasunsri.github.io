@@ -1,71 +1,105 @@
-const ball = document.getElementById('ball');
+const player = document.getElementById('player');
+const star = document.getElementById('star');
 const gameArea = document.getElementById('game-area');
 const scoreDisplay = document.getElementById('score');
-const timeDisplay = document.getElementById('time');
-
-// Retrieve stored high score or set to 0 if not found
-let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
-
-// Display high score
-let highScoreDisplay = document.createElement('p');
-highScoreDisplay.id = 'high-score';
-highScoreDisplay.textContent = `High Score: ${highScore}`;
-document.body.insertBefore(highScoreDisplay, timeDisplay);
+const highScoreDisplay = document.getElementById('high-score');
 
 let score = 0;
-let timeLeft = 30;
+let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+highScoreDisplay.textContent = `High Score: ${highScore}`;
+let gameInterval, starInterval;
+let starSpeed = 5;
+let isGameOver = false;
 
-function moveBall() {
-    const gameAreaWidth = gameArea.offsetWidth;
-    const gameAreaHeight = gameArea.offsetHeight;
-    const maxX = gameAreaWidth - ball.offsetWidth;
-    const maxY = gameAreaHeight - ball.offsetHeight;
-
-    const randomX = Math.floor(Math.random() * maxX);
-    const randomY = Math.floor(Math.random() * maxY);
-
-    ball.style.left = `${randomX}px`;
-    ball.style.top = `${randomY}px`;
-}
-
-ball.addEventListener('click', function() {
-    score++;
-    scoreDisplay.textContent = `Score: ${score}`;
-    moveBall();
+// Move player
+document.addEventListener('keydown', (e) => {
+    if (isGameOver) return;
+    
+    const playerPosition = player.getBoundingClientRect();
+    const gameAreaPosition = gameArea.getBoundingClientRect();
+    
+    if (e.key === 'ArrowLeft' && playerPosition.left > gameAreaPosition.left) {
+        player.style.left = player.offsetLeft - 20 + 'px';
+    }
+    if (e.key === 'ArrowRight' && playerPosition.right < gameAreaPosition.right) {
+        player.style.left = player.offsetLeft + 20 + 'px';
+    }
 });
 
-function countdown() {
-    const timer = setInterval(() => {
-        timeLeft--;
-        timeDisplay.textContent = `Time left: ${timeLeft}s`;
+// Start falling star
+function startStar() {
+    star.style.top = '0px';
+    star.style.left = Math.random() * (gameArea.offsetWidth - star.offsetWidth) + 'px';
+    
+    starInterval = setInterval(() => {
+        if (isGameOver) return;
         
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            endGame();
+        let starPosition = star.offsetTop + starSpeed;
+        
+        // Check if star is out of bounds
+        if (starPosition > gameArea.offsetHeight) {
+            star.style.top = '0px';
+            star.style.left = Math.random() * (gameArea.offsetWidth - star.offsetWidth) + 'px';
+            starSpeed += 0.5;  // Increase star speed over time
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
+        } else {
+            star.style.top = starPosition + 'px';
+        }
+        
+        checkCollision();
+    }, 30);
+}
+
+// Check for collision
+function checkCollision() {
+    const playerRect = player.getBoundingClientRect();
+    const starRect = star.getBoundingClientRect();
+    
+    if (!(playerRect.right < starRect.left || 
+          playerRect.left > starRect.right || 
+          playerRect.bottom < starRect.top || 
+          playerRect.top > starRect.bottom)) {
+        endGame();
+    }
+}
+
+// End the game
+function endGame() {
+    isGameOver = true;
+    clearInterval(starInterval);
+    clearInterval(gameInterval);
+    
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('highScore', highScore);
+        highScoreDisplay.textContent = `High Score: ${highScore}`;
+        alert(`Game over! New high score: ${score}`);
+    } else {
+        alert(`Game over! Your score: ${score}`);
+    }
+    
+    resetGame();
+}
+
+// Reset the game
+function resetGame() {
+    score = 0;
+    scoreDisplay.textContent = `Score: 0`;
+    starSpeed = 5;
+    isGameOver = false;
+    startStar();
+}
+
+// Start the game loop
+function startGame() {
+    startStar();
+    gameInterval = setInterval(() => {
+        if (!isGameOver) {
+            score++;
+            scoreDisplay.textContent = `Score: ${score}`;
         }
     }, 1000);
 }
 
-function endGame() {
-    // Check if the current score is higher than the high score
-    if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('highScore', highScore); // Store the new high score
-        highScoreDisplay.textContent = `High Score: ${highScore}`;
-        alert(`New high score! Your score is ${score}`);
-    } else {
-        alert(`Game over! Your score is ${score}`);
-    }
-    resetGame();
-}
-
-function resetGame() {
-    score = 0;
-    timeLeft = 30;
-    scoreDisplay.textContent = `Score: ${score}`;
-    timeDisplay.textContent = `Time left: 30s`;
-    moveBall();
-}
-
-moveBall();
-countdown();
+startGame();
