@@ -3,153 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sri Lanka Cricket - Live Updates</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
-    <style>
-        .animate-bounce {
-            animation: bounce 1s infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
-            50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-        }
-        .animate-spin {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <title>Catch the Ball Game</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-blue-600 text-white p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Sri Lanka Cricket</h1>
-            <div>
-                <a href="#upcoming" class="mx-2 hover:underline">Upcoming Matches</a>
-                <a href="#team" class="mx-2 hover:underline">Team</a>
-                <a href="#news" class="mx-2 hover:underline">News</a>
-            </div>
-        </div>
-    </nav>
+<body>
+    <h1>Catch the Ball</h1>
+    <div id="game-area">
+        <div id="ball"></div>
+    </div>
+    <p id="score">Score: 0</p>
+    <p id="time">Time left: 30s</p>
 
-    <header class="bg-yellow-400 text-blue-900 py-20 text-center relative overflow-hidden">
-        <h2 class="text-4xl font-bold mb-4 animate-bounce">Welcome to Sri Lanka Cricket</h2>
-        <p class="text-xl">Home of the Lions</p>
-        <div class="absolute top-0 left-0 w-full h-full flex justify-around items-center pointer-events-none">
-           
-        </div>
-    </header>
-
-    <main class="container mx-auto mt-8">
-        <section id="upcoming" class="mb-12">
-            <h3 class="text-2xl font-bold mb-4">Upcoming Matches</h3>
-            <div id="matches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <p class="text-center col-span-full">Loading matches...</p>
-            </div>
-        </section>
-
-        <section id="team" class="mb-12">
-            <h3 class="text-2xl font-bold mb-4">Team Roster</h3>
-            <div id="team-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <p class="text-center col-span-full">Loading team details...</p>
-            </div>
-        </section>
-
-        <section id="news" class="mb-12">
-            <h3 class="text-2xl font-bold mb-4">Latest News</h3>
-            <div id="news-container" class="space-y-4">
-                <p class="text-center">Loading news...</p>
-            </div>
-        </section>
-    </main>
-
-    <footer class="bg-blue-600 text-white p-4 mt-8">
-        <div class="container mx-auto text-center">
-            <p>&copy; 2024 Sri Lanka Cricket. All rights reserved.</p>
-        </div>
-    </footer>
-
-    <script>
-        // Simulated API calls (replace with real API endpoints when available)
-        function fetchMatches() {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    resolve([
-                        { date: '2024-10-15', opponent: 'India', venue: 'Colombo' },
-                        { date: '2024-10-20', opponent: 'Pakistan', venue: 'Karachi' },
-                        { date: '2024-10-25', opponent: 'Australia', venue: 'Sydney' }
-                    ]);
-                }, 1000);
-            });
-        }
-
-        function fetchTeam() {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    resolve([
-                        { name: 'Dasun Shanaka', role: 'All-rounder (Captain)' },
-                        { name: 'Wanindu Hasaranga', role: 'All-rounder' },
-                        { name: 'Dhananjaya de Silva', role: 'Batsman' },
-                        { name: 'Pathum Nissanka', role: 'Batsman' },
-                        { name: 'Charith Asalanka', role: 'Batsman' },
-                        { name: 'Kusal Mendis', role: 'Wicket-keeper Batsman' }
-                    ]);
-                }, 1500);
-            });
-        }
-
-        function fetchNews() {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    resolve([
-                        { title: 'Sri Lanka announces squad for upcoming series', date: '2024-10-01' },
-                        { title: 'Hasaranga breaks T20I bowling record', date: '2024-09-28' },
-                        { title: 'Sri Lanka Cricket launches new development program', date: '2024-09-25' }
-                    ]);
-                }, 2000);
-            });
-        }
-
-        // Render functions
-        function renderMatches(matches) {
-            const container = document.getElementById('matches-container');
-            container.innerHTML = matches.map(match => `
-                <div class="bg-white p-4 rounded shadow">
-                    <p class="font-bold">${match.date}</p>
-                    <p>vs ${match.opponent}</p>
-                    <p>Venue: ${match.venue}</p>
-                </div>
-            `).join('');
-        }
-
-        function renderTeam(team) {
-            const container = document.getElementById('team-container');
-            container.innerHTML = team.map(player => `
-                <div class="bg-white p-4 rounded shadow">
-                    <p class="font-bold">${player.name}</p>
-                    <p>${player.role}</p>
-                </div>
-            `).join('');
-        }
-
-        function renderNews(news) {
-            const container = document.getElementById('news-container');
-            container.innerHTML = news.map(item => `
-                <div class="bg-white p-4 rounded shadow">
-                    <p class="font-bold">${item.title}</p>
-                    <p class="text-sm text-gray-600">${item.date}</p>
-                </div>
-            `).join('');
-        }
-
-        // Fetch and render data
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchMatches().then(renderMatches);
-            fetchTeam().then(renderTeam);
-            fetchNews().then(renderNews);
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
