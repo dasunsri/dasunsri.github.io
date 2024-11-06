@@ -262,140 +262,166 @@
 
     <script>
         let state = {
-            balance: 0,
-            targetBalance: 0,
-            totalLoss: 0,
-            lotSize: 0,
-            trades: [],
-            stopLoss: 0,
-            takeProfit: 0,
-            percentageIncrease: 0
-        };
+    balance: 0,
+    targetBalance: 0,
+    totalLoss: 0,
+    lotSize: 0,
+    trades: [],
+    stopLoss: 0,
+    takeProfit: 0,
+    percentageIncrease: 0
+};
 
-        function startTrading() {
-            const balance = parseFloat(document.getElementById('balance').value);
-            const percentageIncrease = parseFloat(document.getElementById('percentageIncrease').value);
+// Load state from local storage if available
+function loadState() {
+    const savedState = JSON.parse(localStorage.getItem('tradingState'));
+    if (savedState) {
+        state = savedState;
+        document.getElementById('setupForm').style.display = 'none';
+        document.getElementById('tradingInterface').style.display = 'block';
+        updateDisplay();
+    }
+}
 
-            if (!balance || !percentageIncrease) {
-                alert('Please fill in all fields');
-                return;
-            }
+// Save state to local storage
+function saveState() {
+    localStorage.setItem('tradingState', JSON.stringify(state));
+}
 
-            state = {
-                balance,
-                targetBalance: balance + (balance * (percentageIncrease / 100)),
-                totalLoss: 0,
-                lotSize: 0,
-                trades: [],
-                stopLoss: 0,
-                takeProfit: 0,
-                percentageIncrease
-            };
-            
-            document.getElementById('setupForm').style.display = 'none';
-            document.getElementById('tradingInterface').style.display = 'block';
-            document.getElementById('tradeActions').style.display = 'none';
-            
-            updateDisplay();
-        }
+function startTrading() {
+    const balance = parseFloat(document.getElementById('balance').value);
+    const percentageIncrease = parseFloat(document.getElementById('percentageIncrease').value);
 
-        function calculateNewTrade() {
-            const stopLoss = parseFloat(document.getElementById('newStopLoss').value);
-            const takeProfit = parseFloat(document.getElementById('newTakeProfit').value);
+    if (!balance || !percentageIncrease) {
+        alert('Please fill in all fields');
+        return;
+    }
 
-            if (!stopLoss || !takeProfit) {
-                alert('Please enter both Stop Loss and Take Profit points');
-                return;
-            }
+    state = {
+        balance,
+        targetBalance: balance + (balance * (percentageIncrease / 100)),
+        totalLoss: 0,
+        lotSize: 0,
+        trades: [],
+        stopLoss: 0,
+        takeProfit: 0,
+        percentageIncrease
+    };
 
-            state.stopLoss = stopLoss;
-            state.takeProfit = takeProfit;
-            state.lotSize = calculateLotSize();
+    saveState();  // Save to local storage
 
-            document.getElementById('currentSL').textContent = stopLoss.toFixed(2);
-            document.getElementById('currentTP').textContent = takeProfit.toFixed(2);
-            document.getElementById('lotSize').textContent = state.lotSize.toFixed(2);
-            document.getElementById('tradeActions').style.display = 'block';
-        }
+    document.getElementById('setupForm').style.display = 'none';
+    document.getElementById('tradingInterface').style.display = 'block';
+    document.getElementById('tradeActions').style.display = 'none';
+    
+    updateDisplay();
+}
 
-        function calculateLotSize() {
-            return (state.balance * (state.percentageIncrease / 100) + state.totalLoss) / state.takeProfit;
-        }
+function calculateNewTrade() {
+    const stopLoss = parseFloat(document.getElementById('newStopLoss').value);
+    const takeProfit = parseFloat(document.getElementById('newTakeProfit').value);
 
-        function handleTrade(outcome) {
-            if (outcome === 'win') {
-                state.balance = state.targetBalance;
-                state.totalLoss = 0;
-                state.targetBalance = state.balance + (state.balance * (state.percentageIncrease / 100));
-            } else {
-                const loss = state.stopLoss * state.lotSize;
-                state.balance -= loss;
-                state.totalLoss += loss;
-            }
+    if (!stopLoss || !takeProfit) {
+        alert('Please enter both Stop Loss and Take Profit points');
+        return;
+    }
 
-            state.trades.unshift({
-                outcome,
-                balance: state.balance,
-                lotSize: state.lotSize,
-                stopLoss: state.stopLoss,
-                takeProfit: state.takeProfit,
-                timestamp: new Date().toLocaleTimeString()
-            });
+    state.stopLoss = stopLoss;
+    state.takeProfit = takeProfit;
+    state.lotSize = calculateLotSize();
 
-            // Reset trade form
-            document.getElementById('newStopLoss').value = '';
-            document.getElementById('newTakeProfit').value = '';
-            document.getElementById('tradeActions').style.display = 'none';
-            
-            updateDisplay();
-        }
+    saveState();  // Save to local storage
 
-        function updateDisplay() {
-            document.getElementById('currentBalance').textContent = `$${state.balance.toFixed(2)}`;
-            document.getElementById('targetBalance').textContent = `$${state.targetBalance.toFixed(2)}`;
-            
-            const errorMessage = document.getElementById('errorMessage');
-            if (state.balance <= 0) {
-                errorMessage.style.display = 'block';
-                document.getElementById('tradeForm').classList.add('disabled');
-            } else {
-                errorMessage.style.display = 'none';
-                document.getElementById('tradeForm').classList.remove('disabled');
-            }
+    document.getElementById('currentSL').textContent = stopLoss.toFixed(2);
+    document.getElementById('currentTP').textContent = takeProfit.toFixed(2);
+    document.getElementById('lotSize').textContent = state.lotSize.toFixed(2);
+    document.getElementById('tradeActions').style.display = 'block';
+}
 
-            updateTradeHistory();
-        }
+function calculateLotSize() {
+    return (state.balance * (state.percentageIncrease / 100) + state.totalLoss) / state.takeProfit;
+}
 
-        function updateTradeHistory() {
-            const historyElement = document.getElementById('tradeHistory');
-            historyElement.innerHTML = state.trades.map(trade => `
-                <div class="trade-item ${trade.outcome === 'win' ? 'trade-win' : 'trade-loss'}">
-                    <div><strong>${trade.outcome === 'win' ? 'Won' : 'Lost'}</strong> - Balance: $${trade.balance.toFixed(2)}</div>
-                    <div>Lot Size: ${trade.lotSize.toFixed(2)} | SL: ${trade.stopLoss} | TP: ${trade.takeProfit}</div>
-                    <div>Time: ${trade.timestamp}</div>
-                </div>
-            `).join('');
-        }
+function handleTrade(outcome) {
+    if (outcome === 'win') {
+        state.balance = state.targetBalance;
+        state.totalLoss = 0;
+        state.targetBalance = state.balance + (state.balance * (state.percentageIncrease / 100));
+    } else {
+        const loss = state.stopLoss * state.lotSize;
+        state.balance -= loss;
+        state.totalLoss += loss;
+    }
 
-        function resetCalculator() {
-            document.getElementById('setupForm').style.display = 'block';
-            document.getElementById('tradingInterface').style.display = 'none';
-            document.getElementById('balance').value = '';
-            document.getElementById('percentageIncrease').value = '';
-            document.getElementById('newStopLoss').value = '';
-            document.getElementById('newTakeProfit').value = '';
-            
-            state = {
-                balance: 0,
-                targetBalance: 0,
-                totalLoss: 0,
-                lotSize: 0,
-                trades: [],
-                stopLoss: 0,
-                takeProfit: 0,
-                percentageIncrease: 0
-            };
-        }
+    state.trades.unshift({
+        outcome,
+        balance: state.balance,
+        lotSize: state.lotSize,
+        stopLoss: state.stopLoss,
+        takeProfit: state.takeProfit,
+        timestamp: new Date().toLocaleTimeString()
+    });
+
+    saveState();  // Save to local storage
+
+    document.getElementById('newStopLoss').value = '';
+    document.getElementById('newTakeProfit').value = '';
+    document.getElementById('tradeActions').style.display = 'none';
+    
+    updateDisplay();
+}
+
+function updateDisplay() {
+    document.getElementById('currentBalance').textContent = `$${state.balance.toFixed(2)}`;
+    document.getElementById('targetBalance').textContent = `$${state.targetBalance.toFixed(2)}`;
+    
+    const errorMessage = document.getElementById('errorMessage');
+    if (state.balance <= 0) {
+        errorMessage.style.display = 'block';
+        document.getElementById('tradeForm').classList.add('disabled');
+    } else {
+        errorMessage.style.display = 'none';
+        document.getElementById('tradeForm').classList.remove('disabled');
+    }
+
+    updateTradeHistory();
+}
+
+function updateTradeHistory() {
+    const historyElement = document.getElementById('tradeHistory');
+    historyElement.innerHTML = state.trades.map(trade => `
+        <div class="trade-item ${trade.outcome === 'win' ? 'trade-win' : 'trade-loss'}">
+            <div><strong>${trade.outcome === 'win' ? 'Won' : 'Lost'}</strong> - Balance: $${trade.balance.toFixed(2)}</div>
+            <div>Lot Size: ${trade.lotSize.toFixed(2)} | SL: ${trade.stopLoss} | TP: ${trade.takeProfit}</div>
+            <div>Time: ${trade.timestamp}</div>
+        </div>
+    `).join('');
+}
+
+function resetCalculator() {
+    localStorage.removeItem('tradingState');  // Clear local storage
+    document.getElementById('setupForm').style.display = 'block';
+    document.getElementById('tradingInterface').style.display = 'none';
+    document.getElementById('balance').value = '';
+    document.getElementById('percentageIncrease').value = '';
+    document.getElementById('newStopLoss').value = '';
+    document.getElementById('newTakeProfit').value = '';
+    
+    state = {
+        balance: 0,
+        targetBalance: 0,
+        totalLoss: 0,
+        lotSize: 0,
+        trades: [],
+        stopLoss: 0,
+        takeProfit: 0,
+        percentageIncrease: 0
+    };
+}
+
+// Load the saved state when the page loads
+window.onload = loadState;
+
     </script>
 </body>
 </html>
