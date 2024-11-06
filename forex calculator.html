@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a237e;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            color: #1a237e;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background-color: #1a237e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0d1757;
+        }
+
+        .btn-success {
+            background-color: #2e7d32;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1b5e20;
+        }
+
+        .btn-danger {
+            background-color: #c62828;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-secondary {
+            background-color: #455a64;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #37474f;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .trade-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .trade-item {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .trade-win {
+            background-color: #c8e6c9;
+        }
+
+        .trade-loss {
+            background-color: #ffcdd2;
+        }
+
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a237e;
+            margin-top: 5px;
+        }
+
+        #setupForm {
+            display: block;
+        }
+
+        #tradingInterface {
+            display: none;
+        }
+
+        #tradeForm {
+            margin-bottom: 15px;
+        }
+
+        .trade-stats {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+        }
+
+        .trade-points {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .trade-points .input-group {
+            flex: 1;
+        }
+
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Trading Calculator</h1>
+
+        <!-- Initial Setup Form -->
+        <div id="setupForm" class="card">
+            <div class="card-title">Initial Setup</div>
+            <div class="input-group">
+                <label for="balance">Starting Balance</label>
+                <input type="number" id="balance" placeholder="Enter starting balance" step="0.01">
+            </div>
+            <div class="input-group">
+                <label for="percentageIncrease">Percentage Increase Target (%)</label>
+                <input type="number" id="percentageIncrease" placeholder="Enter percentage (e.g., 2)" step="0.01">
+            </div>
+            <button class="btn btn-primary" onclick="startTrading()">Start Trading</button>
+        </div>
+
+        <!-- Trading Interface -->
+        <div id="tradingInterface">
+            <div class="error-message" id="errorMessage">
+                Account balance is zero or negative. Trading stopped.
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Current Balance</div>
+                    <div class="stats-value" id="currentBalance">$0.00</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Target Balance</div>
+                    <div class="stats-value" id="targetBalance">$0.00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">New Trade Setup</div>
+                <div id="tradeForm">
+                    <div class="trade-points">
+                        <div class="input-group">
+                            <label for="newStopLoss">Stop Loss Points</label>
+                            <input type="number" id="newStopLoss" placeholder="Enter stop loss points" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label for="newTakeProfit">Take Profit Points</label>
+                            <input type="number" id="newTakeProfit" placeholder="Enter take profit points" step="0.01">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="calculateNewTrade()">Calculate Lot Size</button>
+                </div>
+                
+                <div id="tradeActions" style="display: none;">
+                    <div class="trade-stats">
+                        <div>Current Lot Size: <span id="lotSize" class="stats-value">0.00</span></div>
+                        <div>Stop Loss Points: <span id="currentSL" class="stats-value">0.00</span></div>
+                        <div>Take Profit Points: <span id="currentTP" class="stats-value">0.00</span></div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-success" onclick="handleTrade('win')">Win Trade</button>
+                        <button class="btn btn-danger" onclick="handleTrade('loss')">Lose Trade</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Trade History</div>
+                <div id="tradeHistory" class="trade-history"></div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="resetCalculator()">Reset Calculator</button>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            balance: 0,
+            targetBalance: 0,
+            totalLoss: 0,
+            lotSize: 0,
+            trades: [],
+            stopLoss: 0,
+            takeProfit: 0,
+            percentageIncrease: 0
+        };
+
+        function startTrading() {
+            const balance = parseFloat(document.getElementById('balance').value);
+            const percentageIncrease = parseFloat(document.getElementById('percentageIncrease').value);
+
+            if (!balance || !percentageIncrease) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            state = {
+                balance,
+                targetBalance: balance + (balance * (percentageIncrease / 100)),
+                totalLoss: 0,
+                lotSize: 0,
+                trades: [],
+                stopLoss: 0,
+                takeProfit: 0,
+                percentageIncrease
+            };
+            
+            document.getElementById('setupForm').style.display = 'none';
+            document.getElementById('tradingInterface').style.display = 'block';
+            document.getElementById('tradeActions').style.display = 'none';
+            
+            updateDisplay();
+        }
+
+        function calculateNewTrade() {
+            const stopLoss = parseFloat(document.getElementById('newStopLoss').value);
+            const takeProfit = parseFloat(document.getElementById('newTakeProfit').value);
+
+            if (!stopLoss || !takeProfit) {
+                alert('Please enter both Stop Loss and Take Profit points');
+                return;
+            }
+
+            state.stopLoss = stopLoss;
+            state.takeProfit = takeProfit;
+            state.lotSize = calculateLotSize();
+
+            document.getElementById('currentSL').textContent = stopLoss.toFixed(2);
+            document.getElementById('currentTP').textContent = takeProfit.toFixed(2);
+            document.getElementById('lotSize').textContent = state.lotSize.toFixed(2);
+            document.getElementById('tradeActions').style.display = 'block';
+        }
+
+        function calculateLotSize() {
+            return (state.balance * (state.percentageIncrease / 100) + state.totalLoss) / state.takeProfit;
+        }
+
+        function handleTrade(outcome) {
+            if (outcome === 'win') {
+                state.balance = state.targetBalance;
+                state.totalLoss = 0;
+                state.targetBalance = state.balance + (state.balance * (state.percentageIncrease / 100));
+            } else {
+                const loss = state.stopLoss * state.lotSize;
+                state.balance -= loss;
+                state.totalLoss += loss;
+            }
+
+            state.trades.unshift({
+                outcome,
+                balance: state.balance,
+                lotSize: state.lotSize,
+                stopLoss: state.stopLoss,
+                takeProfit: state.takeProfit,
+                timestamp: new Date().toLocaleTimeString()
+            });
+
+            // Reset trade form
+            document.getElementById('newStopLoss').value = '';
+            document.getElementById('newTakeProfit').value = '';
+            document.getElementById('tradeActions').style.display = 'none';
+            
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentBalance').textContent = `$${state.balance.toFixed(2)}`;
+            document.getElementById('targetBalance').textContent = `$${state.targetBalance.toFixed(2)}`;
+            
+            const errorMessage = document.getElementById('errorMessage');
+            if (state.balance <= 0) {
+                errorMessage.style.display = 'block';
+                document.getElementById('tradeForm').classList.add('disabled');
+            } else {
+                errorMessage.style.display = 'none';
+                document.getElementById('tradeForm').classList.remove('disabled');
+            }
+
+            updateTradeHistory();
+        }
+
+        function updateTradeHistory() {
+            const historyElement = document.getElementById('tradeHistory');
+            historyElement.innerHTML = state.trades.map(trade => `
+                <div class="trade-item ${trade.outcome === 'win' ? 'trade-win' : 'trade-loss'}">
+                    <div><strong>${trade.outcome === 'win' ? 'Won' : 'Lost'}</strong> - Balance: $${trade.balance.toFixed(2)}</div>
+                    <div>Lot Size: ${trade.lotSize.toFixed(2)} | SL: ${trade.stopLoss} | TP: ${trade.takeProfit}</div>
+                    <div>Time: ${trade.timestamp}</div>
+                </div>
+            `).join('');
+        }
+
+        function resetCalculator() {
+            document.getElementById('setupForm').style.display = 'block';
+            document.getElementById('tradingInterface').style.display = 'none';
+            document.getElementById('balance').value = '';
+            document.getElementById('percentageIncrease').value = '';
+            document.getElementById('newStopLoss').value = '';
+            document.getElementById('newTakeProfit').value = '';
+            
+            state = {
+                balance: 0,
+                targetBalance: 0,
+                totalLoss: 0,
+                lotSize: 0,
+                trades: [],
+                stopLoss: 0,
+                takeProfit: 0,
+                percentageIncrease: 0
+            };
+        }
+    </script>
+</body>
+</html>
